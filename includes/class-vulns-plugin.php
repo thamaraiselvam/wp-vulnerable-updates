@@ -3,7 +3,7 @@
 /**
 * Process vulnerable data
 */
-class AVU_Vulns_plugin {
+class WPVU_Vulns_plugin {
 	public $api_url = 'https://wpvulndb.com/api/v2/plugins/';
 
 	/**
@@ -32,7 +32,7 @@ class AVU_Vulns_plugin {
 		echo "<pre>";
 		print_r($plugins);
 
-		update_option( 'avu-plugin-data', json_encode( $plugins ) );
+		update_option( 'wpvu-plugin-data', json_encode( $plugins ) );
 	}
 
 
@@ -45,9 +45,9 @@ class AVU_Vulns_plugin {
 	 */
 	public function get_plugin_vulnerabilities( $plugin, $file_path ) {
 
-		$plugin = AVU_Vulns_Common::set_text_domain( $plugin );
+		$plugin = WPVU_Vulns_Common::set_text_domain( $plugin );
 		$text_domain = $plugin['TextDomain'];
-		$plugin_vuln = AVU_Vulns_Common::request($this->api_url, $text_domain );
+		$plugin_vuln = WPVU_Vulns_Common::request($this->api_url, $text_domain );
 
 		if ( is_object( $plugin_vuln ) && property_exists( $plugin_vuln, $text_domain ) && is_array( $plugin_vuln->$text_domain->vulnerabilities ) ) {
 
@@ -78,14 +78,14 @@ class AVU_Vulns_plugin {
 	 */
 	public function get_installed_plugins_cache() {
 
-		$plugin_data = json_decode( get_option( 'avu-plugin-data' ) );
+		$plugin_data = json_decode( get_option( 'wpvu-plugin-data' ) );
 		if ( ! empty( $plugin_data ) ) {
 
 			if ( ! function_exists( 'get_plugins' ) ) {
 		        require_once ABSPATH . 'wp-admin/includes/plugin.php';
 		    }
 
-			$plugins = json_decode( get_option( 'avu-plugin-data' ), true );
+			$plugins = json_decode( get_option( 'wpvu-plugin-data' ), true );
 
 			foreach ( $plugins as $key => $plugin ) {
 				$plugin = $this->get_cached_plugin_vulnerabilities( $plugin, $key );
@@ -143,7 +143,7 @@ class AVU_Vulns_plugin {
 			$installed_plugins = get_plugins();
 		}
 
-		$plugin = AVU_Vulns_Common::set_text_domain( $plugin );
+		$plugin = WPVU_Vulns_Common::set_text_domain( $plugin );
 
 		if ( isset( $installed_plugins[ $file_path ]['Version'] ) ) {
 
@@ -174,10 +174,10 @@ class AVU_Vulns_plugin {
 
 	public function after_row_text( $plugin_file, $plugin_data, $status ) {
 
-		global $avu_plugin_data;
+		global $wpvu_plugin_data;
 
-		if ( ! is_array( $avu_plugin_data ) ) {
-			$avu_plugin_data = json_decode( get_option( 'avu-plugin-data' ), true );
+		if ( ! is_array( $wpvu_plugin_data ) ) {
+			$wpvu_plugin_data = json_decode( get_option( 'wpvu-plugin-data' ), true );
 		}
 
 		$message =  sprintf(
@@ -190,7 +190,7 @@ class AVU_Vulns_plugin {
 		$string .=    '<td colspan="2" style="border-bottom: 1px solid #E2E2E2; color: #dc3232;">';
 		$string .=       '<p style="color: #dc3232"><strong>' . $message . '</strong> ';
 
-		$vulnerabilities = $this->get_cached_plugin_vulnerabilities( $avu_plugin_data[ $plugin_file ], $plugin_file );
+		$vulnerabilities = $this->get_cached_plugin_vulnerabilities( $wpvu_plugin_data[ $plugin_file ], $plugin_file );
 		foreach ( $vulnerabilities['vulnerabilities'] as $vulnerability ) {
 
 			if ( null == $vulnerability['fixed_in'] || $vulnerability['fixed_in'] > $plugin_data['Version'] ) {
@@ -204,7 +204,7 @@ class AVU_Vulns_plugin {
 				}
 
 				$string .=          '' . $fixed_in ;
-				$string .= AVU_Vulns_Common::add_multiple_links($vulnerability['references']['url']);
+				$string .= WPVU_Vulns_Common::add_multiple_links($vulnerability['references']['url']);
 			}
 
 		}
