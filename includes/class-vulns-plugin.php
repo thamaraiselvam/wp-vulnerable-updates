@@ -18,7 +18,7 @@ class WPVU_Vulns_plugin {
 			$plugins[ $key ] = $this->get_plugin_vulnerabilities( $plugin_meta, $key ); //appending vulnerable data
 		}
 
-		update_option( 'wpvu-plugin-data', json_encode( $plugins ) );
+		update_option( 'wpvu-plugin-updates', json_encode( $plugins ) );
 
 		return $plugins;
 	}
@@ -73,7 +73,7 @@ class WPVU_Vulns_plugin {
 
 	public function get_installed_plugins_cache($only_cache = false) {
 
-		$plugins = json_decode( get_option( 'wpvu-plugin-data' ) );
+		$plugins = json_decode( get_option( 'wpvu-plugin-updates' ) );
 
 		if ( ! empty( $plugins ) ) {
 			return $plugins;
