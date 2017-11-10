@@ -71,12 +71,16 @@ class WPVU_Vulns_plugin {
 		return $plugin;
 	}
 
-	public function get_installed_plugins_cache() {
+	public function get_installed_plugins_cache($only_cache = false) {
 
 		$plugins = json_decode( get_option( 'wpvu-plugin-data' ) );
 
 		if ( ! empty( $plugins ) ) {
 			return $plugins;
+		}
+
+		if ($only_cache) {
+			return array();
 		}
 
 		$plugins = $this->process_plugins();
@@ -201,6 +205,17 @@ class WPVU_Vulns_plugin {
 		$string .= '</tr>';
 
 		echo $string;
+	}
+
+	public function remove_updates($remove_plugins){
+
+		$cached_updates = $this->get_installed_plugins_cache($only_cache = true);
+
+		if (empty($cached_updates)) {
+			return ;
+		}
+
+		WPVU_Vulns_Common::remove_updates($cached_updates, $remove_plugins, $this->type);
 	}
 
 }

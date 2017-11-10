@@ -91,4 +91,17 @@ class WPVU_Vulns_Common{
 
 		printf( '<div class="%1$s"><p style="color: #dc3232">%2$s</p></div>', $class, $message );
 	}
+
+	static public function remove_updates($cached_updates, $remove_updates, $type){
+
+		foreach ($remove_updates as $update) {
+			if (empty($cached_updates->$update)) {
+				continue;
+			}
+
+			unset($cached_updates->$update);
+		}
+
+		update_option( 'wpvu-' . $type . '-data' ,json_encode( $cached_updates ) );
+	}
 }

@@ -57,12 +57,16 @@ class WPVU_Vulns_Theme {
 		return $theme;
 	}
 
-	public function get_installed_themes_cache() {
+	public function get_installed_themes_cache($only_cache = false) {
 
 		$themes = json_decode( get_option( 'wpvu-theme-data' ) );
 
 		if ( !empty( $themes ) ) {
 			return $themes;
+		}
+
+		if ($only_cache) {
+			return array();
 		}
 
 		// this occurs only right after activation, store theme data on wpvu-theme-data
@@ -108,6 +112,10 @@ class WPVU_Vulns_Theme {
 		// add after theme row text
 		foreach ( $themes as $theme ) {
 
+			if (empty($theme)) {
+				continue;
+			}
+
 			$path = $theme->file_path;
 			$added_notice = false;
 
@@ -134,6 +142,17 @@ class WPVU_Vulns_Theme {
 		}
 
 		return $themes;
+	}
+
+	public function remove_updates($remove_themes){
+
+		$cached_updates = $this->get_installed_themes_cache($only_cache = true);
+
+		if (empty($cached_updates)) {
+			return ;
+		}
+
+		WPVU_Vulns_Common::remove_updates($cached_updates, $remove_themes, $this->type);
 	}
 
 }
