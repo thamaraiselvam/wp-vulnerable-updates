@@ -5,11 +5,11 @@ Plugin Name: WP Vulnerable Updates
 Description: Find Vulnerable updates.
 Version: 1.0.0
 Author: Thamaraiselvam
-Author URI: https://thamaraiselvam.com/
+Author URI: https://github.com/Thamaraiselvam/wp-vulnerable-updates
 Text Domain: WP Vulnerable Updates
 */
 
-defined('ABSPATH') or die('No script please!');
+defined('ABSPATH') or die('No scripts allowed');
 
 class WP_Vulnerable_Updates {
 	public $title;
@@ -29,9 +29,6 @@ class WP_Vulnerable_Updates {
 		$this->add_hooks();
 	}
 
-	/**
-	 * Initilialize all variables
-	 */
 	public function init_variables() {
 		$this->title = __( 'WP Vulnerable Updates', WPVU_SLUG );
 		// $this->menu_title = __( 'WPVU Settings', WPVU_SLUG );
@@ -41,9 +38,6 @@ class WP_Vulnerable_Updates {
 		$this->vulns_core = new WPVU_Vulns_Core();
 	}
 
-	/**
-	 * Define all constants
-	 */
 	public function add_constants() {
 		$this->define('WPVU_PLUGIN_DIR', wp_normalize_path(plugin_dir_path( __FILE__ )));
 		$this->define('WPVU_SHORT_NAME', 'WPVU');
@@ -59,24 +53,19 @@ class WP_Vulnerable_Updates {
 		define($constant, $value);
 	}
 
-	/**
-	 * Include all necessary files to run
-	 */
 	public function include_files() {
-		// include_once ( WPVU_PLUGIN_DIR . 'includes/class-process-vulns.php' );
 		include_once ( WPVU_PLUGIN_DIR . 'includes/class-vulns-common.php' );
 		include_once ( WPVU_PLUGIN_DIR . 'includes/class-vulns-core.php' );
 		include_once ( WPVU_PLUGIN_DIR . 'includes/class-vulns-plugin.php' );
 		include_once ( WPVU_PLUGIN_DIR . 'includes/class-vulns-theme.php' );
 	}
 
-	/**
-	 * Add actions and filters here
-	 */
 	public function add_hooks() {
 		register_activation_hook( __FILE__, array( $this, 'on_activation' ) );
 
-		add_action( 'admin_head', array( $this, 'admin_head' ) );
+		add_action('upgrader_process_complete', array($this, 'remove_update_from_cache'), 10,  2);
+
+		add_action( 'admin_head', array( $this, 'add_admin_notice' ) );
 
 		$this->add_menu();
 
@@ -84,11 +73,7 @@ class WP_Vulnerable_Updates {
 		$path = 'akismet';
 	}
 
-	public function admin_head(){
-		$this->shows_alert_row();
-	}
-
-	public function shows_alert_row(){
+	public function add_admin_notice(){
 		$this->vulns_plugin->add_notice();
 		$this->vulns_theme->add_notice();
 	}
@@ -128,8 +113,26 @@ class WP_Vulnerable_Updates {
 	 */
 	public function check_ptc(){
 		$this->vulns_plugin->process_plugins();
-		// $this->vulns_theme->process_themes();
+		$this->vulns_theme->process_themes();
 		// $this->vulns_core>process_core();
+
+	}
+
+	public function remove_update_from_cache( $upgrader_object, $options ){
+
+		if ($options['action'] != 'update'){
+			return ;
+		}
+
+		if($options['type'] == 'plugin' ){
+			$this->vulns_plugin->remove_updates($options['plugins']);
+		}
+
+		if($options['type'] == 'theme' ){
+			$this->vulns_theme->remove_updates($options['themes']);
+		}
+
+
 	}
 
 	public function on_deactivation(){
