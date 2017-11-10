@@ -1,223 +1,139 @@
 <?php
 
-/**
-* Process vulnerable data
-*/
 class WPVU_Vulns_Theme {
 	public $api_url = 'https://wpvulndb.com/api/v2/themes/';
+	public $type = 'theme';
 
-	/**
-	 * Process All themes for vulnerablities
-	 */
 	public function process_themes(){
+
 		$themes     = $this->get_themes();
 
-		$vuln_themes = array();
+		$vulnerable_themes = array();
 
-		foreach ( $themes as $key => $theme_info ) {
-			$theme = $this->get_theme_vulnerabilities( $theme, $key );
-			$themes[ $key ] = $theme;
-
-			if ( isset( $theme['is_known_vulnerable'] ) && 'true' == $theme['is_known_vulnerable'] ) {
-				$name = $theme['Name'];
-				$vuln_themes[] = $theme['Name'];
-			}
+		foreach ( $themes as $key => $theme_meta ) {
+			$themes[ $key ] = $this->get_theme_vulnerabilities( $theme_meta ); //appending vulnerable data
 		}
 
-		// echo "<pre>";
-		// print_r($theme);
-
 		update_option( 'wpvu-theme-data', json_encode( $themes ) );
+
+		return $themes;
 	}
 
-
-	/**
-	 * Get theme Vulnerabilities
-	 * get vulnerabilities through API.
-	 * @param  array  $theme
-	 * @param  string $file_path theme file path
-	 * @return array             updated theme
-	 */
-	public function get_theme_vulnerabilities( $theme, $file_path ) {
+	public function get_theme_vulnerabilities( $theme ) {
 
 		$theme = WPVU_Vulns_Common::set_text_domain( $theme );
 		$text_domain = $theme['TextDomain'];
-		$theme_vuln = WPVU_Vulns_Common::request($this->api_url, $text_domain );
+		$theme_vulnerabilities = WPVU_Vulns_Common::request($this->api_url, $text_domain );
 
-		if ( is_object( $theme_vuln ) && property_exists( $theme_vuln, $text_domain ) && is_array( $theme_vuln->$text_domain->vulnerabilities ) ) {
+		if (! is_object( $theme_vulnerabilities ) ){
+			return $theme;
+		}
 
-			foreach ( $theme_vuln->$text_domain->vulnerabilities as $vulnerability ) {
+		//sometimes vulns db has lower theme name
+		if ( !property_exists( $theme_vulnerabilities, $text_domain ) ){
+			if( !property_exists( $theme_vulnerabilities, strtolower($text_domain) ) ) {
+				return $theme;
+			}
 
-				$theme['vulnerabilities'][] = $vulnerability;
+			$text_domain = strtolower($text_domain);
+		}
 
-				// if theme fix is greater than current version, assume it could be vulnerable
-				$theme['is_known_vulnerable'] = 'false';
-				if ( null == $vulnerability->fixed_in || version_compare( $vulnerability->fixed_in, $theme['Version'] ) > 0 ) {
-					$theme['is_known_vulnerable'] = 'true';
-				}
+		if( !is_array( $theme_vulnerabilities->$text_domain->vulnerabilities ) || count($theme_vulnerabilities->$text_domain->vulnerabilities) < 1 ) {
+			return $theme;
+		}
 
+		foreach ( $theme_vulnerabilities->$text_domain->vulnerabilities as $vulnerability ) {
+
+			$theme['vulnerabilities'][] = $vulnerability;
+
+			// if theme fix is greater than current version, assume it is vulnerable
+			$theme['is_known_vulnerable'] = 'false';
+			if ( null == $vulnerability->fixed_in || version_compare( $vulnerability->fixed_in, $theme['Version'] ) > 0 ) {
+				$theme['is_known_vulnerable'] = 'true';
 			}
 
 		}
-
-		$theme['file_path'] = $file_path;
 
 		return $theme;
-
 	}
 
-	/**
-	 * Get Installed themes Cache
-	 * gets the installed themes, checks for vulnerabilities with cached results
-	 * @return array installed themes with vulnerability data
-	 */
 	public function get_installed_themes_cache() {
 
-		$theme_data = json_decode( get_option( 'wpvu-theme-data' ) );
-		if ( ! empty( $theme_data ) ) {
+		$themes = json_decode( get_option( 'wpvu-theme-data' ) );
 
-			$themes = json_decode( get_option( 'wpvu-theme-data' ), true );
-
-			foreach ( $themes as $key => $theme ) {
-				$theme = $this->get_cached_theme_vulnerabilities( $theme, $key );
-				$themes[ $key ] = $theme;
-			}
-
+		if ( !empty( $themes ) ) {
 			return $themes;
-
-		} else {
-			// this occurs only right after activation
-			$this->process_themes();
 		}
+
+		// this occurs only right after activation, store theme data on wpvu-theme-data
+		$themes = $this->process_themes();
+
+		if (empty($themes)) {
+			return false;
+		}
+
+		return $themes;
 
 	}
 
 	public function add_notice(){
 
-		//return false; //if its not a themes.php page
+		if (!$this->can_load_notices()) {
+			return ;
+		}
 
 		add_action( 'admin_notices', array( $this, 'trigger_notice' ) );
 	}
 
-	public function trigger_notice(){
+	private function can_load_notices(){
 
+		if (!empty($_SERVER['REQUEST_URI']) &&
+			strpos($_SERVER['REQUEST_URI'], 'themes.php') !== false ||
+			strpos($_SERVER['REQUEST_URI'], 'update-core.php') !== false
+			) {
+			return true;
+		}
+
+		return false;
+	}
+
+	public function trigger_notice(){
+		//get cached data with vulns info
 		$themes = $this->get_installed_themes_cache();
 
-		$wpvu_theme_data = json_decode( get_option( 'wpvu-theme-data' ), true );
+		if (empty($themes)) {
+			return ;
+		}
 
 		// add after theme row text
 		foreach ( $themes as $theme ) {
 
-			$path = $theme['file_path'];
+			$path = $theme->file_path;
 			$added_notice = false;
 
-			if ( isset( $theme['is_known_vulnerable'] ) &&  'true' == $theme['is_known_vulnerable'] ) {
-				$this->after_row_text($path, $theme, $wpvu_theme_data);
+			if ( !empty( $theme->is_known_vulnerable ) &&  'true' == $theme->is_known_vulnerable ) {
+				WPVU_Vulns_Common::after_row_text($theme, $this->type);
 			}
 		}
-	}
-
-	/**
-	 * Get Cached theme Vulnerabilities
-	 * pulls installed themes, compares version to cached vulnerabilities, adds is_known_vulnerable key to theme.
-	 * @param  array  $theme
-	 * @param  string $file_path theme file path
-	 * @return array             updated theme array
-	 */
-	public function get_cached_theme_vulnerabilities( $theme, $file_path ) {
-
-		global $installed_themes;
-
-		// TODO: convert to cached installed themes
-		if ( ! is_array( $installed_themes ) ) {
-
-			$installed_themes = $this->get_themes();
-		}
-
-		$theme = WPVU_Vulns_Common::set_text_domain( $theme );
-
-		if ( isset( $installed_themes[ $file_path ]['Version'] ) ) {
-
-			// updated the cached version with the one taken from the currently installed
-			$theme['Version'] = $installed_themes[ $file_path ]['Version'];
-
-			if ( isset( $theme['vulnerabilities'] ) && is_array( $theme['vulnerabilities'] ) ) {
-
-				foreach ( $theme['vulnerabilities'] as $vulnerability ) {
-
-					// if theme fix is greater than current version, assume it could be vulnerable
-					$theme['is_known_vulnerable'] = 'false';
-					if ( null == $vulnerability['fixed_in'] || version_compare( $vulnerability['fixed_in'], $theme['Version'] ) > 0 ) {
-						$theme['is_known_vulnerable'] = 'true';
-					}
-
-				}
-
-			}
-
-		}
-
-		$theme['file_path'] = $file_path;
-
-		return $theme;
-
-	}
-
-	public function after_row_text( $theme_file, $theme_data, $wpvu_theme_data ) {
-
-		$string =  sprintf(
-						__( '%1$s has a known vulnerability that may be affecting this version. Please update this theme.', 'vulnerable-theme-checker' ),
-						$theme_data['Name']
-					);
-
-		$vulnerabilities = $this->get_cached_theme_vulnerabilities( $wpvu_theme_data[ $theme_file ], $theme_file );
-
-		echo "<pre>";
-		print_r($vulnerabilities);
-
-		foreach ( $vulnerabilities['vulnerabilities'] as $vulnerability ) {
-
-			if ( null == $vulnerability['fixed_in'] || $vulnerability['fixed_in'] > $theme_data['Version'] ) {
-
-				$fixed_in = '';
-				if ( null !== $vulnerability['fixed_in'] ) {
-					$fixed_in = sprintf(
-									__( 'Fixed in version: %s' ),
-									$vulnerability['fixed_in']
-								);
-				}
-
-				$string .=          '' . $fixed_in ;
-				$string .= WPVU_Vulns_Common::add_multiple_links($vulnerability['references']['url']);
-			}
-
-		}
-
-		$class = 'notice notice-error is-dismissible';
-		$message = __( '<strong>'. WPVU_SHORT_NAME .':</strong> '.$string.'', WPVU_SLUG );
-
-		printf( '<div class="%1$s"><p style="color: #dc3232">%2$s</p></div>', $class, $message );
-
-		// echo $string;
-
 	}
 
 	public function get_themes(){
+
 		if (!function_exists( 'wp_get_themes' )) {
 			include_once ABSPATH . '/wp-includes/theme.php';
 		}
 
-		$themes = wp_get_themes();
-		$theme = array();
+		$installed_themes = wp_get_themes();
+		$themes = array();
 
-		foreach ( $themes as $key => $theme_info ) {
-			$theme['Name'] = $theme_info->get( 'Name' );
-			$theme['TextDomain'] = $theme_info->get( 'TextDomain' );
-			$theme['Version'] = $theme_info->get( 'Version' );
-			$theme['file_path'] = $key;
+		foreach ( $installed_themes as $key => $theme_info ) {
+			$themes[$key]['Name'] = $theme_info->get( 'Name' );
+			$themes[$key]['TextDomain'] = $theme_info->get( 'TextDomain' );
+			$themes[$key]['Version'] = $theme_info->get( 'Version' );
+			$themes[$key]['file_path'] = $key;
 		}
 
-		return $theme;
+		return $themes;
 	}
 
 }
