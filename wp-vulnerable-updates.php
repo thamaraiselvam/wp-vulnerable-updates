@@ -13,15 +13,11 @@ defined('ABSPATH') or die('No scripts allowed');
 
 class WP_Vulnerable_Updates {
 	public $title;
-	// public $menu_title;
 	public $vulns_common;
 	public $vulns_plugin;
 	public $vulns_theme;
 	public $vulns_core;
 
-	/**
-	 * Constructor
-	 */
 	public function __construct() {
 		$this->add_constants();
 		$this->include_files();
@@ -31,7 +27,6 @@ class WP_Vulnerable_Updates {
 
 	public function init_variables() {
 		$this->title = __( 'WP Vulnerable Updates', WPVU_SLUG );
-		// $this->menu_title = __( 'WPVU Settings', WPVU_SLUG );
 		$this->vulns_common = new WPVU_Vulns_Common();
 		$this->vulns_plugin = new WPVU_Vulns_Plugin();
 		$this->vulns_theme = new WPVU_Vulns_Theme();
@@ -69,7 +64,7 @@ class WP_Vulnerable_Updates {
 
 		$this->add_menu();
 
-		add_action( 'wpvu_check_ptc', array( $this, 'check_ptc' ) );
+		add_action( 'wpvu_check_vulnerable_updates', array( $this, 'check_ptc' ) );
 		$path = 'akismet';
 	}
 
@@ -96,26 +91,23 @@ class WP_Vulnerable_Updates {
 		include_once WPVU_PLUGIN_DIR . 'views/settings-page.php';
 	}
 
-	/**
-	 * Activation todo
-	 */
 	public function on_activation(){
-		if ( ! get_option( 'wpvu-plugin-data' ) ) {
-			add_option( 'wpvu-plugin-data', '' );
+		if ( ! get_option( 'wpvu-plugin-updates' ) ) {
+			add_option( 'wpvu-plugin-updates', '' );
+		}
+
+		if ( ! get_option( 'wpvu-plugin-updates' ) ) {
+			add_option( 'wpvu-theme-updates', '' );
 		}
 
 		//Run vulns check twice daily
-		wp_schedule_event( time(), 'twicedaily', 'wpvu_check_ptc' );
+		wp_schedule_event( time(), 'twicedaily', 'wpvu_check_vulnerable_updates' );
 	}
 
-	/**
-	 * Check Plugins, Themes and WordPress Core updates for Vulns
-	 */
 	public function check_ptc(){
 		$this->vulns_plugin->process_plugins();
 		$this->vulns_theme->process_themes();
 		// $this->vulns_core>process_core();
-
 	}
 
 	public function remove_update_from_cache( $upgrader_object, $options ){
@@ -131,8 +123,6 @@ class WP_Vulnerable_Updates {
 		if($options['type'] == 'theme' ){
 			$this->vulns_theme->remove_updates($options['themes']);
 		}
-
-
 	}
 
 	public function on_deactivation(){

@@ -14,7 +14,7 @@ class WPVU_Vulns_Theme {
 			$themes[ $key ] = $this->get_theme_vulnerabilities( $theme_meta ); //appending vulnerable data
 		}
 
-		update_option( 'wpvu-theme-data', json_encode( $themes ) );
+		update_option( 'wpvu-theme-updates', json_encode( $themes ) );
 
 		return $themes;
 	}
@@ -59,7 +59,7 @@ class WPVU_Vulns_Theme {
 
 	public function get_installed_themes_cache($only_cache = false) {
 
-		$themes = json_decode( get_option( 'wpvu-theme-data' ) );
+		$themes = json_decode( get_option( 'wpvu-theme-updates' ) );
 
 		if ( !empty( $themes ) ) {
 			return $themes;
@@ -69,7 +69,7 @@ class WPVU_Vulns_Theme {
 			return array();
 		}
 
-		// this occurs only right after activation, store theme data on wpvu-theme-data
+		// this occurs only right after activation, store theme data on wpvu-theme-updates
 		$themes = $this->process_themes();
 
 		if (empty($themes)) {

@@ -102,6 +102,6 @@ class WPVU_Vulns_Common{
 			unset($cached_updates->$update);
 		}
 
-		update_option( 'wpvu-' . $type . '-data' ,json_encode( $cached_updates ) );
+		update_option( 'wpvu-' . $type . '-updates' ,json_encode( $cached_updates ) );
 	}
 }
