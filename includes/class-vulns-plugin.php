@@ -1,188 +1,174 @@
 <?php
 
-/**
-* Process vulnerable data
-*/
 class WPVU_Vulns_plugin {
 	public $api_url = 'https://wpvulndb.com/api/v2/plugins/';
+	public $type = 'plugin';
 
-	/**
-	 * Process All plugins for vulnerablities
-	 */
-	public function process_plugins(){
+	public function process_plugins() {
+
+		$plugins = $this->get_plugins();
+
+		if ( empty($plugins) ) {
+			return ;
+		}
+
+		$vulnerable_plugins = array();
+
+		foreach ( $plugins as $key => $plugin_meta ) {
+			$plugins[ $key ] = $this->get_plugin_vulnerabilities( $plugin_meta, $key ); //appending vulnerable data
+		}
+
+		update_option( 'wpvu-plugin-data', json_encode( $plugins ) );
+
+		return $plugins;
+	}
+
+	private function get_plugins(){
 		if ( ! function_exists( 'get_plugins' ) ) {
 			require_once ABSPATH . 'wp-admin/includes/plugin.php';
 		}
 
-		$plugins = get_plugins();
-
-		$vuln_plugins = array();
-
-		foreach ( $plugins as $key => $plugin ) {
-
-			$plugin = $this->get_plugin_vulnerabilities( $plugin, $key );
-			$plugins[ $key ] = $plugin;
-
-			if ( isset( $plugin['is_known_vulnerable'] ) && 'true' == $plugin['is_known_vulnerable'] ) {
-				$name = $plugin['Name'];
-				$vuln_plugins[] = $plugin['Name'];
-			}
-		}
-
-		echo "<pre>";
-		print_r($plugins);
-
-		update_option( 'wpvu-plugin-data', json_encode( $plugins ) );
+		return get_plugins();
 	}
 
-
-	/**
-	 * Get Plugin Vulnerabilities
-	 * get vulnerabilities through API.
-	 * @param  array  $plugin
-	 * @param  string $file_path plugin file path
-	 * @return array             updated plugin
-	 */
-	public function get_plugin_vulnerabilities( $plugin, $file_path ) {
+	public function get_plugin_vulnerabilities( $plugin , $key) {
 
 		$plugin = WPVU_Vulns_Common::set_text_domain( $plugin );
 		$text_domain = $plugin['TextDomain'];
-		$plugin_vuln = WPVU_Vulns_Common::request($this->api_url, $text_domain );
+		$plugin_vulnerabilities = WPVU_Vulns_Common::request($this->api_url, $text_domain );
 
-		if ( is_object( $plugin_vuln ) && property_exists( $plugin_vuln, $text_domain ) && is_array( $plugin_vuln->$text_domain->vulnerabilities ) ) {
+		$plugin['file_path'] = $key;
 
-			foreach ( $plugin_vuln->$text_domain->vulnerabilities as $vulnerability ) {
+		if (! is_object( $plugin_vulnerabilities ) ){
+			return $plugin;
+		}
 
-				$plugin['vulnerabilities'][] = $vulnerability;
+		//sometimes vulns db has lower theme name
+		if ( !property_exists( $plugin_vulnerabilities, $text_domain ) ){
+			if( !property_exists( $plugin_vulnerabilities, strtolower($text_domain) ) ) {
+				return $plugin;
+			}
 
-				// if plugin fix is greater than current version, assume it could be vulnerable
-				$plugin['is_known_vulnerable'] = 'false';
-				if ( null == $vulnerability->fixed_in || version_compare( $vulnerability->fixed_in, $plugin['Version'] ) > 0 ) {
-					$plugin['is_known_vulnerable'] = 'true';
-				}
+			$text_domain = strtolower($text_domain);
+		}
 
+		if( !is_array( $plugin_vulnerabilities->$text_domain->vulnerabilities ) || count($plugin_vulnerabilities->$text_domain->vulnerabilities) < 1 ) {
+			return $plugin;
+		}
+
+		foreach ( $plugin_vulnerabilities->$text_domain->vulnerabilities as $vulnerability ) {
+
+			$plugin['vulnerabilities'][] = $vulnerability;
+
+			// if plugin fix is greater than current version, assume it is vulnerable
+			$plugin['is_known_vulnerable'] = 'false';
+			if ( null == $vulnerability->fixed_in || version_compare( $vulnerability->fixed_in, $plugin['Version'] ) > 0 ) {
+				$plugin['is_known_vulnerable'] = 'true';
 			}
 
 		}
-
-		$plugin['file_path'] = $file_path;
 
 		return $plugin;
-
 	}
 
-	/**
-	 * Get Installed Plugins Cache
-	 * gets the installed plugins, checks for vulnerabilities with cached results
-	 * @return array installed plugins with vulnerability data
-	 */
 	public function get_installed_plugins_cache() {
 
-		$plugin_data = json_decode( get_option( 'wpvu-plugin-data' ) );
-		if ( ! empty( $plugin_data ) ) {
+		$plugins = json_decode( get_option( 'wpvu-plugin-data' ) );
 
-			if ( ! function_exists( 'get_plugins' ) ) {
-		        require_once ABSPATH . 'wp-admin/includes/plugin.php';
-		    }
-
-			$plugins = json_decode( get_option( 'wpvu-plugin-data' ), true );
-
-			foreach ( $plugins as $key => $plugin ) {
-				$plugin = $this->get_cached_plugin_vulnerabilities( $plugin, $key );
-				$plugins[ $key ] = $plugin;
-			}
-
+		if ( ! empty( $plugins ) ) {
 			return $plugins;
-
-		} else {
-			// this occurs only right after activation
-			$this->process_plugins();
 		}
 
+		$plugins = $this->process_plugins();
+
+		if (empty($plugins)) {
+			return false;
+		}
+
+		return $plugins;
 	}
 
 	public function add_notice(){
+
+		if ($this->can_load_admin_notices()) {
+			add_action( 'admin_notices', array( $this, 'trigger_admin_notice' ) );
+		}
+
+		if ($this->can_plugin_row_notices()) {
+			add_action( 'admin_notices', array( $this, 'trigger_plugin_row_notice' ) );
+		}
+
+	}
+
+	public function trigger_plugin_row_notice(){
+
 		$plugins = $this->get_installed_plugins_cache();
 
-		// add after plugin row text
+		if (empty($plugins)) {
+			return ;
+		}
+
 		foreach ( $plugins as $plugin ) {
 
-			$path = $plugin['file_path'];
-			$added_notice = false;
-
-			if ( isset( $plugin['is_known_vulnerable'] ) &&  'true' == $plugin['is_known_vulnerable'] ) {
-				add_action( 'after_plugin_row_' . $path, array( $this, 'after_row_text' ), 10, 3 );
-
-				if ( ! $added_notice ) {
-					// add_action( 'admin_notices', array( $this, 'vulnerable_admin_notice' ) );
-					$added_notice = true;
-				}
+			if ( isset( $plugin->is_known_vulnerable ) &&  'true' == $plugin->is_known_vulnerable ) {
+				add_action( 'after_plugin_row_' . $plugin->file_path, array( $this, 'after_row_text' ), 10, 3 );
 			}
 
 		}
 	}
 
-	/**
-	 * Get Cached Plugin Vulnerabilities
-	 * pulls installed plugins, compares version to cached vulnerabilities, adds is_known_vulnerable key to plugin.
-	 * @param  array  $plugin
-	 * @param  string $file_path plugin file path
-	 * @return array             updated plugin array
-	 */
-	public function get_cached_plugin_vulnerabilities( $plugin, $file_path ) {
+	public function trigger_admin_notice(){
 
-		global $installed_plugins;
+		$plugins = $this->get_installed_plugins_cache();
 
-		// TODO: convert to cached installed plugins
-		if ( ! is_array( $installed_plugins ) ) {
-
-			if ( ! function_exists( 'get_plugins' ) ) {
-		        require_once ABSPATH . 'wp-admin/includes/plugin.php';
-		    }
-
-			$installed_plugins = get_plugins();
+		if (empty($plugins)) {
+			return ;
 		}
 
-		$plugin = WPVU_Vulns_Common::set_text_domain( $plugin );
+		foreach ( $plugins as $plugin ) {
 
-		if ( isset( $installed_plugins[ $file_path ]['Version'] ) ) {
-
-			// updated the cached version with the one taken from the currently installed
-			$plugin['Version'] = $installed_plugins[ $file_path ]['Version'];
-
-			if ( isset( $plugin['vulnerabilities'] ) && is_array( $plugin['vulnerabilities'] ) ) {
-
-				foreach ( $plugin['vulnerabilities'] as $vulnerability ) {
-
-					// if plugin fix is greater than current version, assume it could be vulnerable
-					$plugin['is_known_vulnerable'] = 'false';
-					if ( null == $vulnerability['fixed_in'] || version_compare( $vulnerability['fixed_in'], $plugin['Version'] ) > 0 ) {
-						$plugin['is_known_vulnerable'] = 'true';
-					}
-
-				}
-
+			if ( isset( $plugin->is_known_vulnerable ) &&  'true' == $plugin->is_known_vulnerable ) {
+				WPVU_Vulns_Common::after_row_text($plugin, $this->type);
 			}
 
 		}
-
-		$plugin['file_path'] = $file_path;
-
-		return $plugin;
-
 	}
 
-	public function after_row_text( $plugin_file, $plugin_data, $status ) {
+	private function can_load_admin_notices(){
 
-		global $wpvu_plugin_data;
-
-		if ( ! is_array( $wpvu_plugin_data ) ) {
-			$wpvu_plugin_data = json_decode( get_option( 'wpvu-plugin-data' ), true );
+		if (!empty($_SERVER['REQUEST_URI']) &&
+			strpos($_SERVER['REQUEST_URI'], 'update-core.php') !== false
+			) {
+			return true;
 		}
+
+		return false;
+	}
+
+	private function can_plugin_row_notices(){
+
+		if (!empty($_SERVER['REQUEST_URI']) &&
+			strpos($_SERVER['REQUEST_URI'], 'plugins.php') !== false
+			) {
+			return true;
+		}
+
+		return false;
+	}
+
+	public function after_row_text($name, $plugin_data, $extra ) {
+
+		$plugins_data = $this->get_installed_plugins_cache();
+
+		if (empty($plugins_data) || empty($name)) {
+			return ;
+		}
+
+		$plugin_data = $plugins_data->$name;
 
 		$message =  sprintf(
-						__( '%1$s has a known vulnerability that may be affecting this version. Please update this plugin.', 'vulnerable-plugin-checker' ),
-						$plugin_data['Name']
+						__( '%1$s has a known vulnerability that may be affecting this version. Update this plugin.', 'vulnerable-plugin-checker' ),
+						$plugin_data->Name
 					);
 
 		$string  = '<tr class="active update">';
@@ -190,30 +176,31 @@ class WPVU_Vulns_plugin {
 		$string .=    '<td colspan="2" style="border-bottom: 1px solid #E2E2E2; color: #dc3232;">';
 		$string .=       '<p style="color: #dc3232"><strong>' . $message . '</strong> ';
 
-		$vulnerabilities = $this->get_cached_plugin_vulnerabilities( $wpvu_plugin_data[ $plugin_file ], $plugin_file );
-		foreach ( $vulnerabilities['vulnerabilities'] as $vulnerability ) {
+		if (empty($plugin_data->vulnerabilities) || count($plugin_data->vulnerabilities) < 1) {
+			return ;
+		}
 
-			if ( null == $vulnerability['fixed_in'] || $vulnerability['fixed_in'] > $plugin_data['Version'] ) {
+		foreach ( $plugin_data->vulnerabilities as $vulnerability ) {
 
-				$fixed_in = '';
-				if ( null !== $vulnerability['fixed_in'] ) {
-					$fixed_in = sprintf(
-									__( 'Fixed in version: %s' ),
-									$vulnerability['fixed_in']
-								);
-				}
-
-				$string .=          '' . $fixed_in ;
-				$string .= WPVU_Vulns_Common::add_multiple_links($vulnerability['references']['url']);
+			if ( null != $vulnerability->fixed_in && $vulnerability->fixed_in <= $plugin_data->Version ) {
+				continue;
 			}
+
+			$fixed_in = '';
+
+			if ( null !== $vulnerability->fixed_in ) {
+				$fixed_in = sprintf( __( ' Fixed in version: %s' ), $vulnerability->fixed_in );
+			}
+
+			$string .= $fixed_in ;
+			$string .= WPVU_Vulns_Common::add_multiple_links($vulnerability->references->url);
 
 		}
 
-		$string .=    '</p></td>';
+		$string .= '</p></td>';
 		$string .= '</tr>';
 
 		echo $string;
-
 	}
 
 }

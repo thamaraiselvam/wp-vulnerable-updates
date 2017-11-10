@@ -2,7 +2,7 @@
 
 class WPVU_Vulns_Common{
 
-	const LINK_LIMIT = 4;
+	const LINK_LIMIT = 3;
 
 	static public function add_multiple_links($urls){
 
@@ -17,12 +17,6 @@ class WPVU_Vulns_Common{
 		return $string;
 	}
 
-	/**
-	 * Get Security JSON
-	 * gets data from the vulnerability database and returns the result in JSON
-	 * @param  string $text_domain text domain
-	 * @return string              json string of vulnerabilities for the given text domain
-	 */
 	static public function request($url, $text_domain ) {
 
 		$url = $url . $text_domain;
@@ -39,12 +33,6 @@ class WPVU_Vulns_Common{
 
 	}
 
-	/**
-	 * Set Text Domain
-	 * sets the text domain to the TextDomain key if it is not set
-	 * @param  array $item
-	 * @return array updated item
-	 */
 	static public function set_text_domain( $item ) {
 
 		// get text domain from folder if it isn't listed
@@ -66,5 +54,41 @@ class WPVU_Vulns_Common{
 		$message = __( '<strong>'. WPVU_SHORT_NAME .':</strong> There are some currently installed have known vulnerabilities with their current version. I suggest updating all the available updates', WPVU_SLUG );
 
 		printf( '<div class="%1$s"><p>%2$s</p></div>', $class, $message );
+	}
+
+	static public function after_row_text($update_data, $type) {
+
+		$string =  sprintf(
+						__( '%1$s has a known vulnerability that may be affecting this version. Please update this ' . $type . '.', 'vulnerable-theme-checker' ),
+						$update_data->Name
+					);
+
+		if (empty($update_data->vulnerabilities) || count($update_data->vulnerabilities) < 1) {
+			return ;
+		}
+
+		foreach ( $update_data->vulnerabilities as $vulnerability ) {
+
+			if ( null != $vulnerability->fixed_in && $vulnerability->fixed_in <= $update_data->Version ) {
+				continue;
+			}
+
+			$fixed_in = '';
+			if ( null !== $vulnerability->fixed_in ) {
+				$fixed_in = sprintf(
+								__( ' Fixed in version: %s' ),
+								$vulnerability->fixed_in
+							);
+			}
+
+			$string .= $fixed_in ;
+			$string .= WPVU_Vulns_Common::add_multiple_links($vulnerability->references->url);
+
+		}
+
+		$class = 'notice notice-error is-dismissible';
+		$message = __( '<strong>' . WPVU_SHORT_NAME .':</strong> ' . $string, WPVU_SLUG );
+
+		printf( '<div class="%1$s"><p style="color: #dc3232">%2$s</p></div>', $class, $message );
 	}
 }

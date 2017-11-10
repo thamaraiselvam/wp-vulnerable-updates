@@ -1,12 +1,12 @@
 <?php
 
 /*
-Plugin Name: Vulnerable Updates
-Description: Find vulsn updates.
+Plugin Name: WP Vulnerable Updates
+Description: Find Vulnerable updates.
 Version: 1.0.0
 Author: Thamaraiselvam
 Author URI: https://thamaraiselvam.com/
-Text Domain: Vulnerable Updates
+Text Domain: WP Vulnerable Updates
 */
 
 defined('ABSPATH') or die('No script please!');
@@ -102,7 +102,7 @@ class WP_Vulnerable_Updates {
 	}
 
 	public function add_admin_menu(){
-		add_menu_page($this->title, $this->title, 'activate_plugins', WPVU_SLUG, array($this, 'settings_page'), 'dashicons-wptc', '80.0564');
+		add_options_page($this->title, $this->title, 'activate_plugins', WPVU_SLUG, array($this, 'settings_page'));
 	}
 
 	public function settings_page(){
@@ -127,8 +127,8 @@ class WP_Vulnerable_Updates {
 	 * Check Plugins, Themes and WordPress Core updates for Vulns
 	 */
 	public function check_ptc(){
-		// $this->vulns_plugin->process_plugins();
-		$this->vulns_theme->process_themes();
+		$this->vulns_plugin->process_plugins();
+		// $this->vulns_theme->process_themes();
 		// $this->vulns_core>process_core();
 	}
 
