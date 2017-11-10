@@ -1,5 +1,5 @@
 <?php
 
-class AVU_Vulns_Core{
+class WPVU_Vulns_Core{
 	
 }

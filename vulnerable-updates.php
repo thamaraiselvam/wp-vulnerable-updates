@@ -9,9 +9,9 @@ Author URI: https://thamaraiselvam.com/
 Text Domain: Vulnerable Updates
 */
 
-defined('ABSPATH') or die('No script kiddies please!');
+defined('ABSPATH') or die('No script please!');
 
-class All_Vulnerable_Updates {
+class WP_Vulnerable_Updates {
 	public $title;
 	// public $menu_title;
 	public $vulns_common;
@@ -33,21 +33,21 @@ class All_Vulnerable_Updates {
 	 * Initilialize all variables
 	 */
 	public function init_variables() {
-		$this->title = __( 'All Vulnerable Updates', AVU_SLUG );
-		// $this->menu_title = __( 'AVU Settings', AVU_SLUG );
-		$this->vulns_common = new AVU_Vulns_Common();
-		$this->vulns_plugin = new AVU_Vulns_Plugin();
-		$this->vulns_theme = new AVU_Vulns_Theme();
-		$this->vulns_core = new AVU_Vulns_Core();
+		$this->title = __( 'WP Vulnerable Updates', WPVU_SLUG );
+		// $this->menu_title = __( 'WPVU Settings', WPVU_SLUG );
+		$this->vulns_common = new WPVU_Vulns_Common();
+		$this->vulns_plugin = new WPVU_Vulns_Plugin();
+		$this->vulns_theme = new WPVU_Vulns_Theme();
+		$this->vulns_core = new WPVU_Vulns_Core();
 	}
 
 	/**
 	 * Define all constants
 	 */
 	public function add_constants() {
-		$this->define('AVU_PLUGIN_DIR', wp_normalize_path(plugin_dir_path( __FILE__ )));
-		$this->define('AVU_SHORT_NAME', 'AVU');
-		$this->define('AVU_SLUG', 'all-vulnerable-updates');
+		$this->define('WPVU_PLUGIN_DIR', wp_normalize_path(plugin_dir_path( __FILE__ )));
+		$this->define('WPVU_SHORT_NAME', 'WPVU');
+		$this->define('WPVU_SLUG', 'wp-vulnerable-updates');
 	}
 
 
@@ -63,11 +63,11 @@ class All_Vulnerable_Updates {
 	 * Include all necessary files to run
 	 */
 	public function include_files() {
-		// include_once ( AVU_PLUGIN_DIR . 'includes/class-process-vulns.php' );
-		include_once ( AVU_PLUGIN_DIR . 'includes/class-vulns-common.php' );
-		include_once ( AVU_PLUGIN_DIR . 'includes/class-vulns-core.php' );
-		include_once ( AVU_PLUGIN_DIR . 'includes/class-vulns-plugin.php' );
-		include_once ( AVU_PLUGIN_DIR . 'includes/class-vulns-theme.php' );
+		// include_once ( WPVU_PLUGIN_DIR . 'includes/class-process-vulns.php' );
+		include_once ( WPVU_PLUGIN_DIR . 'includes/class-vulns-common.php' );
+		include_once ( WPVU_PLUGIN_DIR . 'includes/class-vulns-core.php' );
+		include_once ( WPVU_PLUGIN_DIR . 'includes/class-vulns-plugin.php' );
+		include_once ( WPVU_PLUGIN_DIR . 'includes/class-vulns-theme.php' );
 	}
 
 	/**
@@ -80,7 +80,7 @@ class All_Vulnerable_Updates {
 
 		$this->add_menu();
 
-		add_action( 'avu_check_ptc', array( $this, 'check_ptc' ) );
+		add_action( 'wpvu_check_ptc', array( $this, 'check_ptc' ) );
 		$path = 'akismet';
 	}
 
@@ -102,25 +102,25 @@ class All_Vulnerable_Updates {
 	}
 
 	public function add_admin_menu(){
-		add_menu_page($this->title, $this->title, 'activate_plugins', AVU_SLUG, array($this, 'settings_page'), 'dashicons-wptc', '80.0564');
+		add_menu_page($this->title, $this->title, 'activate_plugins', WPVU_SLUG, array($this, 'settings_page'), 'dashicons-wptc', '80.0564');
 	}
 
 	public function settings_page(){
 		$this->check_ptc();
 		return false;
-		include_once AVU_PLUGIN_DIR . 'views/settings-page.php';
+		include_once WPVU_PLUGIN_DIR . 'views/settings-page.php';
 	}
 
 	/**
 	 * Activation todo
 	 */
 	public function on_activation(){
-		if ( ! get_option( 'avu-plugin-data' ) ) {
-			add_option( 'avu-plugin-data', '' );
+		if ( ! get_option( 'wpvu-plugin-data' ) ) {
+			add_option( 'wpvu-plugin-data', '' );
 		}
 
 		//Run vulns check twice daily
-		wp_schedule_event( time(), 'twicedaily', 'avu_check_ptc' );
+		wp_schedule_event( time(), 'twicedaily', 'wpvu_check_ptc' );
 	}
 
 	/**
@@ -137,4 +137,4 @@ class All_Vulnerable_Updates {
 	}
 }
 
-new All_Vulnerable_Updates();
+new WP_Vulnerable_Updates();

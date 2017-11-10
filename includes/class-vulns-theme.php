@@ -3,7 +3,7 @@
 /**
 * Process vulnerable data
 */
-class AVU_Vulns_Theme {
+class WPVU_Vulns_Theme {
 	public $api_url = 'https://wpvulndb.com/api/v2/themes/';
 
 	/**
@@ -27,7 +27,7 @@ class AVU_Vulns_Theme {
 		// echo "<pre>";
 		// print_r($theme);
 
-		update_option( 'avu-theme-data', json_encode( $themes ) );
+		update_option( 'wpvu-theme-data', json_encode( $themes ) );
 	}
 
 
@@ -40,9 +40,9 @@ class AVU_Vulns_Theme {
 	 */
 	public function get_theme_vulnerabilities( $theme, $file_path ) {
 
-		$theme = AVU_Vulns_Common::set_text_domain( $theme );
+		$theme = WPVU_Vulns_Common::set_text_domain( $theme );
 		$text_domain = $theme['TextDomain'];
-		$theme_vuln = AVU_Vulns_Common::request($this->api_url, $text_domain );
+		$theme_vuln = WPVU_Vulns_Common::request($this->api_url, $text_domain );
 
 		if ( is_object( $theme_vuln ) && property_exists( $theme_vuln, $text_domain ) && is_array( $theme_vuln->$text_domain->vulnerabilities ) ) {
 
@@ -73,10 +73,10 @@ class AVU_Vulns_Theme {
 	 */
 	public function get_installed_themes_cache() {
 
-		$theme_data = json_decode( get_option( 'avu-theme-data' ) );
+		$theme_data = json_decode( get_option( 'wpvu-theme-data' ) );
 		if ( ! empty( $theme_data ) ) {
 
-			$themes = json_decode( get_option( 'avu-theme-data' ), true );
+			$themes = json_decode( get_option( 'wpvu-theme-data' ), true );
 
 			foreach ( $themes as $key => $theme ) {
 				$theme = $this->get_cached_theme_vulnerabilities( $theme, $key );
@@ -103,7 +103,7 @@ class AVU_Vulns_Theme {
 
 		$themes = $this->get_installed_themes_cache();
 
-		$avu_theme_data = json_decode( get_option( 'avu-theme-data' ), true );
+		$wpvu_theme_data = json_decode( get_option( 'wpvu-theme-data' ), true );
 
 		// add after theme row text
 		foreach ( $themes as $theme ) {
@@ -112,7 +112,7 @@ class AVU_Vulns_Theme {
 			$added_notice = false;
 
 			if ( isset( $theme['is_known_vulnerable'] ) &&  'true' == $theme['is_known_vulnerable'] ) {
-				$this->after_row_text($path, $theme, $avu_theme_data);
+				$this->after_row_text($path, $theme, $wpvu_theme_data);
 			}
 		}
 	}
@@ -134,7 +134,7 @@ class AVU_Vulns_Theme {
 			$installed_themes = $this->get_themes();
 		}
 
-		$theme = AVU_Vulns_Common::set_text_domain( $theme );
+		$theme = WPVU_Vulns_Common::set_text_domain( $theme );
 
 		if ( isset( $installed_themes[ $file_path ]['Version'] ) ) {
 
@@ -163,14 +163,14 @@ class AVU_Vulns_Theme {
 
 	}
 
-	public function after_row_text( $theme_file, $theme_data, $avu_theme_data ) {
+	public function after_row_text( $theme_file, $theme_data, $wpvu_theme_data ) {
 
 		$string =  sprintf(
 						__( '%1$s has a known vulnerability that may be affecting this version. Please update this theme.', 'vulnerable-theme-checker' ),
 						$theme_data['Name']
 					);
 
-		$vulnerabilities = $this->get_cached_theme_vulnerabilities( $avu_theme_data[ $theme_file ], $theme_file );
+		$vulnerabilities = $this->get_cached_theme_vulnerabilities( $wpvu_theme_data[ $theme_file ], $theme_file );
 
 		echo "<pre>";
 		print_r($vulnerabilities);
@@ -188,13 +188,13 @@ class AVU_Vulns_Theme {
 				}
 
 				$string .=          '' . $fixed_in ;
-				$string .= AVU_Vulns_Common::add_multiple_links($vulnerability['references']['url']);
+				$string .= WPVU_Vulns_Common::add_multiple_links($vulnerability['references']['url']);
 			}
 
 		}
 
 		$class = 'notice notice-error is-dismissible';
-		$message = __( '<strong>'. AVU_SHORT_NAME .':</strong> '.$string.'', AVU_SLUG );
+		$message = __( '<strong>'. WPVU_SHORT_NAME .':</strong> '.$string.'', WPVU_SLUG );
 
 		printf( '<div class="%1$s"><p style="color: #dc3232">%2$s</p></div>', $class, $message );
 

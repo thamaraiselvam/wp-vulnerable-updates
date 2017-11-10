@@ -1,1 +1,1 @@
-# all-vulnerable-updates
+# wp-vulnerable-updates

@@ -1,6 +1,6 @@
 <?php
 
-class AVU_Vulns_Common{
+class WPVU_Vulns_Common{
 
 	const LINK_LIMIT = 4;
 
@@ -63,7 +63,7 @@ class AVU_Vulns_Common{
 	static public function vulnerable_admin_notice() {
 		return false;
 		$class = 'notice notice-error is-dismissible';
-		$message = __( '<strong>'. AVU_SHORT_NAME .':</strong> There are some currently installed have known vulnerabilities with their current version. I suggest updating all the available updates', AVU_SLUG );
+		$message = __( '<strong>'. WPVU_SHORT_NAME .':</strong> There are some currently installed have known vulnerabilities with their current version. I suggest updating all the available updates', WPVU_SLUG );
 
 		printf( '<div class="%1$s"><p>%2$s</p></div>', $class, $message );
 	}
