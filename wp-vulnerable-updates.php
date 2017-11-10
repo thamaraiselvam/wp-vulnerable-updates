@@ -1,12 +1,13 @@
 <?php
-
 /*
 Plugin Name: WP Vulnerable Updates
-Description: Find Vulnerable updates.
+Plugin URI: https://github.com/thamaraiselvam/wp-vulnerable-updates
+Description: WP vulnerable updates is an automated vulnerable check plugin that checks vulnerable updates in real time and alerts you.
 Version: 1.0.0
 Author: Thamaraiselvam
-Author URI: https://github.com/Thamaraiselvam/wp-vulnerable-updates
+Author URI: https://github.com/thamaraiselvam/
 Text Domain: WP Vulnerable Updates
+Tested up to: 4.8.3
 */
 
 defined('ABSPATH') or die('No scripts allowed');

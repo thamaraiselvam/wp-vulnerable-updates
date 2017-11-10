@@ -1,7 +1,7 @@
 === WP Vulnerable Updates ===
 
 Contributors: thamaraiselvam
-Tags: vulnerable updates, all vulnerable updates, wpvu, updates, open source, plugin updates, theme updates, wordpress updates, free.
+Tags: vulnerable updates, all vulnerable updates, wpvu, updates, open source, plugin updates, theme updates, wordpress updates, WP vulns, vulns, free.
 Requires at least: 4.0.0
 Tested up to: 4.8.3
 Stable tag: 1.0.0
