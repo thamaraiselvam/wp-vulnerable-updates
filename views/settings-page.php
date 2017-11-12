@@ -1,10 +1,13 @@
 <?php
 
-$allow_emails_checked = get_option( 'wpvu_allow_emails' ) ? 'checked' : '';
+WPVU_Vulns_Common::save_settings($_POST);
+
+$allow_emails_checked = get_option( 'wpvu_allow_emails' ) === 'yes' ? 'checked' : '';
+$wpvu_email_address = get_option( 'wpvu_email_address' ) ? esc_attr( get_option( 'wpvu_email_address' ) ) : esc_attr( get_option( 'admin_email' ) );
 
 $string  = '<div class="wrap">';
 $string .=    '<h2>' . $this->title . ' Settings</h2>';
-$string .=    '<form method="post" action="options.php">';
+$string .=    '<form method="post" action="options-general.php?page=wp-vulnerable-updates">';
 
 // need to echo because there is no get_settings_field
 echo $string;
@@ -21,7 +24,7 @@ $string .=       '<table class="form-table">';
 $string .=          '<tr valign="top">';
 $string .=             '<th scope="row">' . __( 'Email Address:', WPVU_SLUG ) . '</th>';
 $string .=             '<td>';
-$string .=                '<input type="text" name="wpvu_email_address" placeholder="' . esc_attr( get_option( 'admin_email' ) ) . '" value="' . esc_attr( get_option( 'wpvu_email_address' ) ) . '" />';
+$string .=                '<input type="text" name="wpvu_email_address"  value="' . $wpvu_email_address . '" />';
 $string .=             '</td>';
 $string .=          '</tr>';
 $string .=          '<tr valign="top">';

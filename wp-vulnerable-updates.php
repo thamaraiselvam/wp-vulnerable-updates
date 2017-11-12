@@ -87,8 +87,8 @@ class WP_Vulnerable_Updates {
 	}
 
 	public function settings_page(){
-		$this->check_ptc();
-		return false;
+		// $this->check_ptc();
+		// return false;
 		include_once WPVU_PLUGIN_DIR . 'views/settings-page.php';
 	}
 

@@ -20,7 +20,6 @@ class WPVU_Vulns_Common{
 	static public function request($url, $text_domain ) {
 
 		$url = $url . $text_domain;
-		echo $url;
 		$request = wp_remote_get( $url, array( 'sslverify' => false ) );
 
 		if ( is_wp_error( $request ) ) {
@@ -103,5 +102,22 @@ class WPVU_Vulns_Common{
 		}
 
 		update_option( 'wpvu-' . $type . '-updates' ,json_encode( $cached_updates ) );
+	}
+
+	static public function save_settings($settings){
+		if (empty($settings) || empty($settings['submit'])) {
+			return ;
+		}
+
+		if (!empty($settings['wpvu_email_address'])){
+			update_option('wpvu_email_address', $settings['wpvu_email_address']);
+		}
+
+		if (empty($settings['wpvu_allow_emails'])){
+			update_option('wpvu_allow_emails', 'no');
+		} else {
+			update_option('wpvu_allow_emails', 'yes');
+		}
+
 	}
 }
