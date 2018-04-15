@@ -32,7 +32,6 @@ class WPVU_Vulns_plugin {
 	}
 
 	public function get_plugin_vulnerabilities( $plugin , $key) {
-
 		$plugin = WPVU_Vulns_Common::set_text_domain( $plugin );
 		$text_domain = $plugin['TextDomain'];
 		$plugin_vulnerabilities = WPVU_Vulns_Common::request($this->api_url, $text_domain );
@@ -60,10 +59,10 @@ class WPVU_Vulns_plugin {
 
 			$plugin['vulnerabilities'][] = $vulnerability;
 
-			// if plugin fix is greater than current version, assume it is vulnerable
-			$plugin['is_known_vulnerable'] = 'false';
+			// if fixed_in is greater than current version, assume it is vulnerable
+			$plugin['is_known_vulnerable'] = 'no';
 			if ( null == $vulnerability->fixed_in || version_compare( $vulnerability->fixed_in, $plugin['Version'] ) > 0 ) {
-				$plugin['is_known_vulnerable'] = 'true';
+				$plugin['is_known_vulnerable'] = 'yes';
 			}
 
 		}
@@ -113,8 +112,7 @@ class WPVU_Vulns_plugin {
 		}
 
 		foreach ( $plugins as $plugin ) {
-
-			if ( isset( $plugin->is_known_vulnerable ) &&  'true' == $plugin->is_known_vulnerable ) {
+			if ( isset( $plugin->is_known_vulnerable ) &&  'yes' == $plugin->is_known_vulnerable ) {
 				add_action( 'after_plugin_row_' . $plugin->file_path, array( $this, 'after_row_text' ), 10, 3 );
 			}
 
@@ -131,7 +129,7 @@ class WPVU_Vulns_plugin {
 
 		foreach ( $plugins as $plugin ) {
 
-			if ( isset( $plugin->is_known_vulnerable ) &&  'true' == $plugin->is_known_vulnerable ) {
+			if ( isset( $plugin->is_known_vulnerable ) &&  'yes' == $plugin->is_known_vulnerable ) {
 				WPVU_Vulns_Common::after_row_text($plugin, $this->type);
 			}
 

@@ -75,7 +75,7 @@ class WPVU_Vulns_Common{
 
 		foreach ( $update_data->vulnerabilities as $vulnerability ) {
 
-			if ( null != $vulnerability->fixed_in && $vulnerability->fixed_in <= $update_data->Version ) {
+			if ( null == $vulnerability->fixed_in || version_compare( $vulnerability->fixed_in, $plugin->Version ) > 0 ) {
 				continue;
 			}
 
@@ -218,6 +218,10 @@ class WPVU_Vulns_Common{
 	}
 
 	private function process_vulnerable_for_email_template($update, &$html){
+
+		if ( !isset( $plugin->is_known_vulnerable ) ||  'no' == $plugin->is_known_vulnerable ) {
+			return ;
+		}
 
 		if (empty($update->vulnerabilities) || count($update->vulnerabilities) < 1) {
 			return ;

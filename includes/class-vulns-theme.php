@@ -46,9 +46,9 @@ class WPVU_Vulns_Theme {
 			$theme['vulnerabilities'][] = $vulnerability;
 
 			// if theme fix is greater than current version, assume it is vulnerable
-			$theme['is_known_vulnerable'] = 'false';
+			$theme['is_known_vulnerable'] = 'no';
 			if ( null == $vulnerability->fixed_in || version_compare( $vulnerability->fixed_in, $theme['Version'] ) > 0 ) {
-				$theme['is_known_vulnerable'] = 'true';
+				$theme['is_known_vulnerable'] = 'yes';
 			}
 
 		}
@@ -118,7 +118,7 @@ class WPVU_Vulns_Theme {
 			$path = $theme->file_path;
 			$added_notice = false;
 
-			if ( !empty( $theme->is_known_vulnerable ) &&  'true' == $theme->is_known_vulnerable ) {
+			if ( !empty( $theme->is_known_vulnerable ) &&  'yes' == $theme->is_known_vulnerable ) {
 				WPVU_Vulns_Common::after_row_text($theme, $this->type);
 			}
 		}
