@@ -65,7 +65,7 @@ class WPVU_Vulns_Common{
 	static public function after_row_text($update_data, $type) {
 
 		$string =  sprintf(
-						__( '%1$s has a known vulnerability that may be affecting this version. Please update this ' . $type . '.', 'vulnerable-theme-checker' ),
+						__( '%1$s has a known vulnerability that may be affecting this version. Update to latest version to avoid any malicious attacks.', 'vulnerable-theme-checker' ),
 						$update_data->Name
 					);
 
