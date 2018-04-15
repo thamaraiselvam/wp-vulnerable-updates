@@ -2,7 +2,14 @@
 
 class WPVU_Vulns_Common{
 
+	private $plugins;
+	private $themes;
 	const LINK_LIMIT = 3;
+
+	public function __construct(){
+		$this->plugins = new WPVU_Vulns_Plugin();
+		$this->themes  = new WPVU_Vulns_Theme();
+	}
 
 	static public function add_multiple_links($urls){
 
@@ -118,6 +125,91 @@ class WPVU_Vulns_Common{
 		} else {
 			update_option('wpvu_allow_emails', 'yes');
 		}
+	}
 
+	static public function get_admin_email(){
+		return get_option( 'wpvu_email_address' ) ? esc_attr( get_option( 'wpvu_email_address' ) ) : esc_attr( get_option( 'admin_email' ) );
+	}
+
+	public function send_email(){
+		$plugins = $this->plugins->get_installed_plugins_cache();
+		$themes = $this->themes->get_installed_themes_cache();
+		$message = $this->get_email_template($plugins, $themes);
+		$to 	 = $this->get_admin_email();
+		$subject = '(WPVU) - Important! Your WordPress site is vulnerable - ' . $this->get_site_url();
+		$response = wp_mail( $to, $subject, $message, $headers = array('Content-Type: text/html'));
+		WPVU_Vulns_Common::wpvu_log($to,'---------$to-----------------');
+		WPVU_Vulns_Common::wpvu_log($subject,'---------$subject-----------------');
+		WPVU_Vulns_Common::wpvu_log($message,'---------$message-----------------');
+		WPVU_Vulns_Common::wpvu_log($response,'---------$response-----------------');
+	}
+
+	private function get_site_url(){
+		if(is_multisite()){
+			return network_home_url();
+		}
+
+		return home_url();
+	}
+
+	private function get_email_template($plugins, $themes){
+
+		$head = '<div style="text-align: justify">
+					Your WordPress site is susceptible to malicious attacks.<br>
+					Kindly update following updates as soon as possible.<br><br>';
+
+		$plugin_html = $theme_html = '';
+
+		foreach ($plugins as $slug => $plugin_data) {
+			$this->process_vulnerable_for_email_template($plugin_data, $plugin_html);
+		}
+
+		foreach ($themes as $slug => $theme_data) {
+			$this->process_vulnerable_for_email_template($theme_data, $theme_html);
+		}
+
+		if (!empty($plugin_html)) {
+			$plugin_html = '<strong >Plugins :</strong> <br> <ul>' . $plugin_html . '</ul>';
+		}
+
+		if (!empty($theme_html)) {
+			$theme_html = '<strong >Themes :</strong> <br> <ul>' . $theme_html . '</ul>';
+		}
+
+		$footer = '<br> <br> Email has been sent by WP Vulnerable Update Plugin. <br> You can turn off emails from Settings > WP Vulnerable Updates';
+
+		return $head . $plugin_html .$theme_html . $footer . '</div>' ;
+	}
+
+	private function process_vulnerable_for_email_template($update, &$html){
+
+		if (empty($update->vulnerabilities) || count($update->vulnerabilities) < 1) {
+			return ;
+		}
+
+		foreach ( $update->vulnerabilities as $vulnerability ) {
+
+			if ( empty($vulnerability->fixed_in) || $vulnerability->fixed_in >= $update->Version ) {
+				continue;
+			}
+
+			$fixed_in = '';
+			if ( null !== $vulnerability->fixed_in ) {
+				$fixed_in = sprintf(
+								__( ' Vulnerability fixed in version: %s' ),
+								$vulnerability->fixed_in
+							);
+			}
+
+			$html .= '<li>' . $update->Name . ' - ' . $fixed_in . '</li>';
+		}
+	}
+
+	static public function wpvu_log($value, $key){
+		if (!defined('WPVU_DEBUG') || !WPVU_DEBUG) {
+			return ;
+		}
+
+		return @file_put_contents(WP_CONTENT_DIR . '/wpvu-logs.txt', "\n -----$key---------- --- " . microtime(true) . "  ----- " . var_export($value, true) . "\n", FILE_APPEND);
 	}
 }

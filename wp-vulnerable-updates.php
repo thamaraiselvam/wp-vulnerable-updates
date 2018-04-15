@@ -2,7 +2,7 @@
 /*
 Plugin Name: WP Vulnerable Updates
 Plugin URI: https://github.com/thamaraiselvam/wp-vulnerable-updates
-Description: WP vulnerable updates is an automated vulnerable check plugin that checks vulnerable updates in real time and alerts you.
+Description: WP vulnerable updates is an automated vulnerable checking plugin in real-time and it emails you if any vulnerable updates found in your WordPress site.
 Version: 1.0.0
 Author: Thamaraiselvam
 Author URI: https://github.com/thamaraiselvam/
@@ -38,6 +38,7 @@ class WP_Vulnerable_Updates {
 		$this->define('WPVU_PLUGIN_DIR', wp_normalize_path(plugin_dir_path( __FILE__ )));
 		$this->define('WPVU_SHORT_NAME', 'WPVU');
 		$this->define('WPVU_SLUG', 'wp-vulnerable-updates');
+		$this->define('WPVU_DEBUG', true);
 	}
 
 
@@ -87,8 +88,6 @@ class WP_Vulnerable_Updates {
 	}
 
 	public function settings_page(){
-		// $this->check_ptc();
-		// return false;
 		include_once WPVU_PLUGIN_DIR . 'views/settings-page.php';
 	}
 
@@ -109,6 +108,7 @@ class WP_Vulnerable_Updates {
 		$this->vulns_plugin->process_plugins();
 		$this->vulns_theme->process_themes();
 		// $this->vulns_core>process_core();
+		$this->vulns_common->send_email();
 	}
 
 	public function remove_update_from_cache( $upgrader_object, $options ){

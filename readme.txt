@@ -1,14 +1,14 @@
 === WP Vulnerable Updates ===
 
 Contributors: thamaraiselvam
-Tags: vulnerable updates, all vulnerable updates, wpvu, updates, open source, plugin updates, theme updates, wordpress updates, WP vulns, vulns, free.
+Tags: vulnerable updates, all vulnerable updates, security, email updates, wpvu, updates, open source, plugin updates, theme updates, wordpress updates, WP vulns, vulns.
 Requires at least: 4.0.0
-Tested up to: 4.8.3
+Tested up to: 4.9.5
 Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-WP vulnerable updates is an automated Vulnerable check plugin that checks Vulnerable updates in real time and alerts you.
+WP vulnerable updates is an automated Vulnerable checking plugin in real time and alerts you if any vulnerable updates found on your WordPress site.
 
 == Description ==
 
@@ -21,7 +21,7 @@ to your wp-content/wp-plugins/ folder and activate it from the WordPress Dashboa
 <strong>How it works ?</strong>
 <br>
 This plugin checks vulnerable updates from <a href="hhttps://wpvulndb.com/" />https://wpvulndb.com/</a> on every 6 hours period <br>
-Warn you on vulnerable updates as admin notice and through email (coming soon)
+Warn you on vulnerable updates as admin notice and through email.
 
 <strong>Why to use the plugin ?</strong>
 <br>
