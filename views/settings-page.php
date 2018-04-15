@@ -2,7 +2,7 @@
 
 WPVU_Vulns_Common::save_settings($_POST);
 
-$allow_emails_checked = get_option( 'wpvu_allow_emails' ) === 'yes' ? 'checked' : '';
+$allow_emails_checked = get_option( 'wpvu-allow-email' ) === 'yes' ? 'checked' : '';
 $wpvu_email_address = WPVU_Vulns_Common::get_admin_email();
 
 $string  = '<div class="wrap">';

@@ -116,22 +116,33 @@ class WPVU_Vulns_Common{
 			return ;
 		}
 
-		if (!empty($settings['wpvu_email_address'])){
-			update_option('wpvu_email_address', $settings['wpvu_email_address']);
+		if (!empty($settings['wpvu-email-address'])){
+			update_option('wpvu-email-address', $settings['wpvu-email-address']);
 		}
 
-		if (empty($settings['wpvu_allow_emails'])){
-			update_option('wpvu_allow_emails', 'no');
+		if (empty($settings['wpvu-allow-email'])){
+			update_option('wpvu-allow-email', 'no');
 		} else {
-			update_option('wpvu_allow_emails', 'yes');
+			update_option('wpvu-allow-email', 'yes');
 		}
 	}
 
 	static public function get_admin_email(){
-		return get_option( 'wpvu_email_address' ) ? esc_attr( get_option( 'wpvu_email_address' ) ) : esc_attr( get_option( 'admin_email' ) );
+		return get_option( 'wpvu-email-address' ) ? esc_attr( get_option( 'wpvu-email-address' ) ) : esc_attr( get_option( 'admin_email' ) );
 	}
 
 	public function send_email(){
+
+		$send_email = get_option( 'wpvu-allow-email' );
+
+		if (empty($send_email) || $send_email === 'no') {
+			return ;
+		}
+
+		//Avoid sending multiple emails in short time
+		if( !$this->allow_this_email() ){
+			return ;
+		}
 
 		$plugins  = $this->plugins->get_installed_plugins_cache();
 		$themes   = $this->themes->get_installed_themes_cache();
@@ -140,10 +151,33 @@ class WPVU_Vulns_Common{
 		$subject  = '(WPVU) - Important! Your WordPress site is vulnerable - ' . $this->get_site_url();
 		$response = wp_mail( $to, $subject, $message, $headers = array('Content-Type: text/html'));
 
-		WPVU_Vulns_Common::wpvu_log($to,'---------$to-----------------');
-		WPVU_Vulns_Common::wpvu_log($subject,'---------$subject-----------------');
-		WPVU_Vulns_Common::wpvu_log($message,'---------$message-----------------');
-		WPVU_Vulns_Common::wpvu_log($response,'---------$response-----------------');
+		update_option('wpvu-last-email-sent', time());
+
+		$this->wpvu_log($to,'---------$to-----------------');
+		$this->wpvu_log($subject,'---------$subject-----------------');
+		$this->wpvu_log($message,'---------$message-----------------');
+		$this->wpvu_log($response,'---------$response-----------------');
+	}
+
+	private function allow_this_email(){
+		$last_email_sent = get_option('wpvu-last-email-sent');
+
+		$this->wpvu_log($last_email_sent,'---------$last_email_sent-----------------');
+
+		if (empty($last_email_sent)) {
+			return true;
+		}
+
+		$next_email_time = $last_email_sent + ( 12 * 60 * 60 );
+
+		$this->wpvu_log($next_email_time,'---------$next_email_time-----------------');
+
+		if (time() < $next_email_time) {
+			return false;
+		}
+
+		return true;
+
 	}
 
 	private function get_site_url(){

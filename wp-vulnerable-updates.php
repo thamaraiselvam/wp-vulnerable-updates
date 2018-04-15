@@ -67,7 +67,6 @@ class WP_Vulnerable_Updates {
 		$this->add_menu();
 
 		add_action( 'wpvu_check_vulnerable_updates', array( $this, 'check_ptc' ) );
-		$path = 'akismet';
 	}
 
 	public function add_admin_notice(){
@@ -98,6 +97,10 @@ class WP_Vulnerable_Updates {
 
 		if ( ! get_option( 'wpvu-plugin-updates' ) ) {
 			add_option( 'wpvu-theme-updates', '' );
+		}
+
+		if ( ! get_option( 'wpvu-allow-email' ) ) {
+			add_option( 'wpvu-allow-email', 'yes' );
 		}
 
 		//Run vulns check twice daily

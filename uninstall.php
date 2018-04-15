@@ -6,5 +6,7 @@ if (!defined('ABSPATH') && !defined('WP_UNINSTALL_PLUGIN')) {
 
 delete_option('wpvu-plugin-updates');
 delete_option('wpvu-theme-updates');
+delete_option('wpvu-allow-email');
+delete_option('wpvu-email-address');
 
 wp_clear_scheduled_hook('wpvu_check_vulnerable_updates');
