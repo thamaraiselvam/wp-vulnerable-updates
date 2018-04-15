@@ -147,6 +147,11 @@ class WPVU_Vulns_Common{
 		$plugins  = $this->plugins->get_installed_plugins_cache();
 		$themes   = $this->themes->get_installed_themes_cache();
 		$message  = $this->get_email_template($plugins, $themes);
+
+		if (!$message) {
+			return ;
+		}
+
 		$to 	  = $this->get_admin_email();
 		$subject  = '(WPVU) - Important! Your WordPress site is vulnerable - ' . $this->get_site_url();
 		$response = wp_mail( $to, $subject, $message, $headers = array('Content-Type: text/html'));
@@ -210,6 +215,10 @@ class WPVU_Vulns_Common{
 
 		if (!empty($theme_html)) {
 			$theme_html = '<strong >Themes :</strong> <br> <ul>' . $theme_html . '</ul>';
+		}
+
+		if (empty($plugin_html) && empty($theme_html) ) {
+			return false;
 		}
 
 		$footer = '<br> <br> Email has been sent by WP Vulnerable Update Plugin. <br> You can turn off emails from Settings > WP Vulnerable Updates';
