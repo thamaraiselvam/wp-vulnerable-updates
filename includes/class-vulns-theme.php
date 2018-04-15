@@ -2,12 +2,11 @@
 
 class WPVU_Vulns_Theme {
 	public $api_url = 'https://wpvulndb.com/api/v2/themes/';
-	public $type = 'theme';
+	public $type    = 'theme';
 
 	public function process_themes(){
 
-		$themes     = $this->get_themes();
-
+		$themes            = $this->get_themes();
 		$vulnerable_themes = array();
 
 		foreach ( $themes as $key => $theme_meta ) {
@@ -135,10 +134,10 @@ class WPVU_Vulns_Theme {
 		$themes = array();
 
 		foreach ( $installed_themes as $key => $theme_info ) {
-			$themes[$key]['Name'] = $theme_info->get( 'Name' );
+			$themes[$key]['Name']       = $theme_info->get( 'Name' );
 			$themes[$key]['TextDomain'] = $theme_info->get( 'TextDomain' );
-			$themes[$key]['Version'] = $theme_info->get( 'Version' );
-			$themes[$key]['file_path'] = $key;
+			$themes[$key]['Version']    = $theme_info->get( 'Version' );
+			$themes[$key]['file_path']  = $key;
 		}
 
 		return $themes;

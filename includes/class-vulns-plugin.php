@@ -2,7 +2,7 @@
 
 class WPVU_Vulns_plugin {
 	public $api_url = 'https://wpvulndb.com/api/v2/plugins/';
-	public $type = 'plugin';
+	public $type    = 'plugin';
 
 	public function process_plugins() {
 

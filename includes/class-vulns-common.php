@@ -132,12 +132,14 @@ class WPVU_Vulns_Common{
 	}
 
 	public function send_email(){
-		$plugins = $this->plugins->get_installed_plugins_cache();
-		$themes = $this->themes->get_installed_themes_cache();
-		$message = $this->get_email_template($plugins, $themes);
-		$to 	 = $this->get_admin_email();
-		$subject = '(WPVU) - Important! Your WordPress site is vulnerable - ' . $this->get_site_url();
+
+		$plugins  = $this->plugins->get_installed_plugins_cache();
+		$themes   = $this->themes->get_installed_themes_cache();
+		$message  = $this->get_email_template($plugins, $themes);
+		$to 	  = $this->get_admin_email();
+		$subject  = '(WPVU) - Important! Your WordPress site is vulnerable - ' . $this->get_site_url();
 		$response = wp_mail( $to, $subject, $message, $headers = array('Content-Type: text/html'));
+
 		WPVU_Vulns_Common::wpvu_log($to,'---------$to-----------------');
 		WPVU_Vulns_Common::wpvu_log($subject,'---------$subject-----------------');
 		WPVU_Vulns_Common::wpvu_log($message,'---------$message-----------------');

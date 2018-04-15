@@ -27,11 +27,11 @@ class WP_Vulnerable_Updates {
 	}
 
 	public function init_variables() {
-		$this->title = __( 'WP Vulnerable Updates', WPVU_SLUG );
+		$this->title        = __( 'WP Vulnerable Updates', WPVU_SLUG );
 		$this->vulns_common = new WPVU_Vulns_Common();
 		$this->vulns_plugin = new WPVU_Vulns_Plugin();
-		$this->vulns_theme = new WPVU_Vulns_Theme();
-		$this->vulns_core = new WPVU_Vulns_Core();
+		$this->vulns_theme  = new WPVU_Vulns_Theme();
+		$this->vulns_core   = new WPVU_Vulns_Core();
 	}
 
 	public function add_constants() {
