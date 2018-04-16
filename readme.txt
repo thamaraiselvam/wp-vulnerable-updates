@@ -8,7 +8,7 @@ Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-WP vulnerable updates is an automated Vulnerable checking plugin in real time and alerts you if any vulnerable updates found on your WordPress site.
+WP vulnerable updates is an automated Vulnerable checking plugin in real time and alert you if any vulnerable updates found on your WordPress site.
 
 == Description ==
 
@@ -50,6 +50,8 @@ Cheers!<br>
 == Changelog ==
 
 = 1.0.0 =
-*Release Date - 10 Nov 2017*
+*Release Date - 16 Apr 2018*
 
-* Feature: Check plugin and theme Vulnerabilities automatically.
+* Feature: Check plugin and theme Vulnerabilities in realtime.
+* Feature: Send detailed email to admin.
+* Feature: Show admin notification on updates page.
