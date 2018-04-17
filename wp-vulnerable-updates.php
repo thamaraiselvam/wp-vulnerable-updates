@@ -67,6 +67,23 @@ class WP_Vulnerable_Updates {
 		$this->add_menu();
 
 		add_action( 'wpvu_check_vulnerable_updates', array( $this, 'check_ptc' ) );
+		add_filter('plugin_action_links', array( $this, 'add_plugin_links' ), 10, 2);
+	}
+
+	public static function add_plugin_links( $links, $file ) {
+		if ( 'wp-vulnerable-updates/wp-vulnerable-updates.php' != $file ) {
+			return $links;
+		}
+
+		// Create the two links
+		$settings_link = '<a href="' . esc_url( admin_url( 'options-general.php?page=wp-vulnerable-updates' ) ) . '">' . __('Settings', WPVU_SLUG) . '</a>';
+		$feedback_link = '<a href="https://github.com/thamaraiselvam/wp-vulnerable-updates/issues" target="_blank">' . __('Feedback', WPVU_SLUG) . '</a>';
+
+		// Add the links to the array
+		array_unshift( $links, $settings_link );
+		array_unshift( $links, $feedback_link );
+
+		return $links;
 	}
 
 	public function add_admin_notice(){
