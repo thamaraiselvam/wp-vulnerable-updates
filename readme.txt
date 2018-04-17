@@ -55,5 +55,3 @@ Cheers!<br>
 * Feature: Check plugin and theme Vulnerabilities in realtime.
 * Feature: Send detailed email to admin.
 * Feature: Show admin notification on updates page.
-
-//Test
