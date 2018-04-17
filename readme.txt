@@ -50,7 +50,7 @@ Cheers!<br>
 == Changelog ==
 
 = 1.0.0 =
-*Release Date - 16 Apr 2018*
+*Release Date - 18 Apr 2018*
 
 * Feature: Check plugin and theme Vulnerabilities in realtime.
 * Feature: Send detailed email to admin.
