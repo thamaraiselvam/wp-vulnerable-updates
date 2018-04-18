@@ -127,13 +127,29 @@ class WPVU_Vulns_plugin {
 			return ;
 		}
 
+		$head = sprintf(
+			__( 'Following plugins has known vulnerability that may be affecting this version. Update to latest version to avoid any malicious attacks.<br>', WPVU_SLUG ) );
+
+		$message = '';
+
 		foreach ( $plugins as $plugin ) {
 
-			if ( isset( $plugin->is_known_vulnerable ) &&  'yes' == $plugin->is_known_vulnerable ) {
-				WPVU_Vulns_Common::after_row_text($plugin, $this->type);
+			if ( empty( $plugin->is_known_vulnerable ) ||  'no' == $plugin->is_known_vulnerable ) {
+				continue ;
 			}
 
+			$plugin_message = sprintf(
+					__( '<br> <strong><i> %s v%s </i></strong> - ', WPVU_SLUG ),
+					$plugin->Name, $plugin->Version);
+			$links = WPVU_Vulns_Common::after_row_text($plugin, $this->type);
+			$message .= __( $plugin_message . $links , WPVU_SLUG );
 		}
+
+		if (empty($message)) {
+			return ;
+		}
+
+		printf( '<div class="notice notice-error is-dismissible"><p>%s</p></div>', $head . $message );
 	}
 
 	private function can_load_admin_notices(){

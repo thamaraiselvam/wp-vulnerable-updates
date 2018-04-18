@@ -4,11 +4,13 @@ class WPVU_Vulns_Common{
 
 	private $plugins;
 	private $themes;
+	private $core;
 	const LINK_LIMIT = 3;
 
 	public function __construct(){
 		$this->plugins = new WPVU_Vulns_Plugin();
 		$this->themes  = new WPVU_Vulns_Theme();
+		$this->core    = new WPVU_Vulns_Core();
 	}
 
 	static public function add_multiple_links($urls){
@@ -27,6 +29,7 @@ class WPVU_Vulns_Common{
 	static public function request($url, $text_domain ) {
 
 		$url = $url . $text_domain;
+
 		$request = wp_remote_get( $url, array( 'sslverify' => false ) );
 
 		if ( is_wp_error( $request ) ) {
@@ -64,38 +67,30 @@ class WPVU_Vulns_Common{
 
 	static public function after_row_text($update_data, $type) {
 
-		$string =  sprintf(
-						__( '%1$s has a known vulnerability that may be affecting this version. Update to latest version to avoid any malicious attacks.', 'vulnerable-theme-checker' ),
-						$update_data->Name
-					);
+		$string = '';
 
 		if (empty($update_data->vulnerabilities) || count($update_data->vulnerabilities) < 1) {
 			return ;
 		}
 
-		foreach ( $update_data->vulnerabilities as $vulnerability ) {
+		if ( $update_data->is_known_vulnerable !== 'yes') {
+			return ;
+		}
 
-			if ( null == $vulnerability->fixed_in || version_compare( $vulnerability->fixed_in, $plugin->Version ) > 0 ) {
-				continue;
-			}
+		foreach ( $update_data->vulnerabilities as $vulnerability ) {
 
 			$fixed_in = '';
 			if ( null !== $vulnerability->fixed_in ) {
-				$fixed_in = sprintf(
-								__( ' Fixed in version: %s' ),
-								$vulnerability->fixed_in
-							);
+				$fixed_in = sprintf( __( ' Fixed in version: %s' ), 	$vulnerability->fixed_in );
 			}
 
 			$string .= $fixed_in ;
 			$string .= WPVU_Vulns_Common::add_multiple_links($vulnerability->references->url);
 
+			break;
 		}
 
-		$class = 'notice notice-error is-dismissible';
-		$message = __( '<strong>' . WPVU_SHORT_NAME .':</strong> ' . $string, WPVU_SLUG );
-
-		printf( '<div class="%1$s"><p style="color: #dc3232">%2$s</p></div>', $class, $message );
+		return $string;
 	}
 
 	static public function remove_updates($cached_updates, $remove_updates, $type){
@@ -132,7 +127,6 @@ class WPVU_Vulns_Common{
 	}
 
 	public function send_email(){
-
 		$send_email = get_option( 'wpvu-allow-email' );
 
 		if (empty($send_email) || $send_email === 'no') {
@@ -146,7 +140,8 @@ class WPVU_Vulns_Common{
 
 		$plugins  = $this->plugins->get_installed_plugins_cache();
 		$themes   = $this->themes->get_installed_themes_cache();
-		$message  = $this->get_email_template($plugins, $themes);
+		$core     = $this->core->get_installed_core_cache();
+		$message  = $this->get_email_template($plugins, $themes, $core);
 
 		if (!$message) {
 			return ;
@@ -193,13 +188,13 @@ class WPVU_Vulns_Common{
 		return home_url();
 	}
 
-	private function get_email_template($plugins, $themes){
+	private function get_email_template($plugins, $themes, $core){
 
 		$head = '<div style="text-align: justify">
 					Your WordPress site is susceptible to malicious attacks.<br>
 					Kindly update following updates as soon as possible.<br><br>';
 
-		$plugin_html = $theme_html = '';
+		$plugin_html = $theme_html = $core_html = '';
 
 		foreach ($plugins as $slug => $plugin_data) {
 			$this->process_vulnerable_for_email_template($plugin_data, $plugin_html);
@@ -207,6 +202,13 @@ class WPVU_Vulns_Common{
 
 		foreach ($themes as $slug => $theme_data) {
 			$this->process_vulnerable_for_email_template($theme_data, $theme_html);
+		}
+
+
+		if (!empty($core)) {
+			if ( !empty($core->vulnerabilities[0]->fixed_in) && $core->vulnerabilities[0]->fixed_in >= $this->core->get_core_version() ) {
+				$core_html = '<strong >WordPress :</strong> <br> <ul> <li>' . $core->Name . ' v' . $this->core->get_core_version() . '</li></ul>';
+			}
 		}
 
 		if (!empty($plugin_html)) {
@@ -217,18 +219,18 @@ class WPVU_Vulns_Common{
 			$theme_html = '<strong >Themes :</strong> <br> <ul>' . $theme_html . '</ul>';
 		}
 
-		if (empty($plugin_html) && empty($theme_html) ) {
+		if (empty($plugin_html) && empty($theme_html) && empty($core_html)) {
 			return false;
 		}
 
 		$footer = '<br> <br> Email has been sent by WP Vulnerable Update Plugin. <br> You can turn off emails from Settings > WP Vulnerable Updates';
 
-		return $head . $plugin_html .$theme_html . $footer . '</div>' ;
+		return $head . $plugin_html .$theme_html . $core_html . $footer . '</div>' ;
 	}
 
 	private function process_vulnerable_for_email_template($update, &$html){
 
-		if ( !isset( $plugin->is_known_vulnerable ) ||  'no' == $plugin->is_known_vulnerable ) {
+		if ( empty( $update->is_known_vulnerable ) ||  'no' == $update->is_known_vulnerable ) {
 			return ;
 		}
 
@@ -251,6 +253,8 @@ class WPVU_Vulns_Common{
 			}
 
 			$html .= '<li>' . $update->Name . ' - ' . $fixed_in . '</li>';
+
+			break;
 		}
 	}
 

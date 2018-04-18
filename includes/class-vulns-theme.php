@@ -108,6 +108,10 @@ class WPVU_Vulns_Theme {
 			return ;
 		}
 
+
+		$head = sprintf(
+				__( 'Following themes has known vulnerability that may be affecting this version. Update to latest version to avoid any malicious attacks.<br>', WPVU_SLUG ) );
+
 		// add after theme row text
 		foreach ( $themes as $theme ) {
 
@@ -118,10 +122,23 @@ class WPVU_Vulns_Theme {
 			$path = $theme->file_path;
 			$added_notice = false;
 
-			if ( !empty( $theme->is_known_vulnerable ) &&  'yes' == $theme->is_known_vulnerable ) {
-				WPVU_Vulns_Common::after_row_text($theme, $this->type);
+			if ( empty( $theme->is_known_vulnerable ) ||  'no' == $theme->is_known_vulnerable ) {
+				continue ;
 			}
+
+			$theme_message = sprintf(
+					__( '<br> <strong><i> %s v%s </i></strong> - ', WPVU_SLUG ),
+					$theme->Name, $theme->Version);
+			$links = WPVU_Vulns_Common::after_row_text($theme, $this->type);
+			$message .= __( $theme_message . $links , WPVU_SLUG );
+
 		}
+
+		if (empty($message)) {
+			return ;
+		}
+
+		printf( '<div class="notice notice-error is-dismissible"><p>%s</p></div>', $head . $message );
 	}
 
 	public function get_themes(){

@@ -89,6 +89,7 @@ class WP_Vulnerable_Updates {
 	public function add_admin_notice(){
 		$this->vulns_plugin->add_notice();
 		$this->vulns_theme->add_notice();
+		$this->vulns_core->add_notice();
 	}
 
 	public function add_menu(){
@@ -127,7 +128,7 @@ class WP_Vulnerable_Updates {
 	public function check_ptc(){
 		$this->vulns_plugin->process_plugins();
 		$this->vulns_theme->process_themes();
-		// $this->vulns_core>process_core();
+		$this->vulns_core->process_core();
 		$this->vulns_common->send_email();
 	}
 
@@ -144,10 +145,10 @@ class WP_Vulnerable_Updates {
 		if($options['type'] == 'theme' ){
 			$this->vulns_theme->remove_updates($options['themes']);
 		}
-	}
 
-	public function on_deactivation(){
-
+		if($options['type'] == 'core' ){
+			update_option('wpvu-core-updates', false);
+		}
 	}
 }
 
