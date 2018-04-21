@@ -39,19 +39,25 @@ Here is the <strong><a href="https://github.com/thamaraiselvam/wp-vulnerable-upd
 Cheers!<br>
 
 == Installation ==
+= Minimum Requirements =
+ * PHP version 5.4.0 or greater.
 
+== Installation ==
 1. Upload the plugin files to the `/wp-content/plugins/plugin-name` directory, or install the plugin through the WordPress plugins screen directly.
 2. Activate the plugin through the 'Plugins' screen in WordPress
 3. Use the Settings->WP Vulnerable Updates to configure the plugin
 
 == Screenshots ==
+1. **Alert near each plugin updates** - You can view the vulnerable updates near each plugin updates with reference links.
+2. **Combined alert in update page** - View all vulnerable updates grouped in updates page with reference links.
+3. **Settings** - You can turn off emails and change the alerting email in settings > WP Vulnerable Updates.
 
 
 == Changelog ==
 
 = 1.0.0 =
-*Release Date - 18 Apr 2018*
+*Release Date - 22 Apr 2018*
 
-* Feature: Check plugin and theme Vulnerabilities in realtime.
-* Feature: Send detailed email to admin.
-* Feature: Show admin notification on updates page.
+* Feature: Check plugin, theme and WordPress core vulnerabilities in real-time.
+* Feature: Send the detailed email to admin.
+* Feature: Show admin notification on the updates page.

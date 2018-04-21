@@ -81,6 +81,10 @@ class WPVU_Vulns_Theme {
 
 	public function add_notice(){
 
+		if (get_option('wpvu-theme-updates', 'not_found') === 'not_found') {
+			return $this->process_themes();
+		}
+
 		if (!$this->can_load_notices()) {
 			return ;
 		}

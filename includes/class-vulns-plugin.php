@@ -93,6 +93,10 @@ class WPVU_Vulns_plugin {
 
 	public function add_notice(){
 
+		if (get_option('wpvu-plugin-updates', 'not_found') === 'not_found') {
+			return $this->process_plugins();
+		}
+
 		if ($this->can_load_admin_notices()) {
 			add_action( 'admin_notices', array( $this, 'trigger_admin_notice' ) );
 		}
