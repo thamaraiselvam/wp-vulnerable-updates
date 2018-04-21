@@ -12,22 +12,23 @@ WP vulnerable updates is an automated Vulnerable checking plugin in real time an
 
 == Description ==
 
-This plugin automatically checks and alerts about WordPress/Plugins/Themes Vulnerable updates.
+WP vulnerable updates is an automated Vulnerable checking plugin in real time and alert you if any vulnerable updates found on your WordPress site.
 
-Download and activate the plugin from wordpress.org or
-clone the repository from GitHub - https://github.com/thamaraiselvam/wp-vulnerable-updates -
-to your wp-content/wp-plugins/ folder and activate it from the WordPress Dashboard after that.
+Major features in WP vulnerable updates include:
+
+* Automatically checks all vulnerable updates and email you in real-time.
+* First free plugn to check all kind of updates such as Plugin, Theme and WordPress Core .
 
 <strong>How it works ?</strong>
 <br>
-This plugin checks vulnerable updates from <a href="hhttps://wpvulndb.com/" />https://wpvulndb.com/</a> on every 6 hours period <br>
+WP vulnerable updates checks vulnerable updates from <strong><a href="https://wpvulndb.com/" target="_blank">https://wpvulndb.com/</a></strong> on every 12 hours period <br>
 Warn you on vulnerable updates as admin notice and through email.
 
 <strong>Why to use the plugin ?</strong>
 <br>
-*Many WordPress sites are hacked every day due to vulnerable plugins/theme/WordPress and this plugin automatically checks Vulnerabilities on your WordPress site and alert you immediately.
-*It uses WP Cron to check for the Vulnerable updates so no external requests to your server.
-*Cached API results to decrease backend load time significantly
+1. Many WordPress sites are hacked every day due to vulnerable plugins/theme/WordPress and this plugin automatically checks Vulnerabilities on your WordPress site and alert you immediately.
+2. It uses WP Cron to check for the Vulnerable updates so no external requests to your server.
+3. Cached API results to decrease backend load time significantly
 
 Well, this is the good reasons and this is your plugin.
 
@@ -39,11 +40,7 @@ Here is the <strong><a href="https://github.com/thamaraiselvam/wp-vulnerable-upd
 Cheers!<br>
 
 == Installation ==
-= Minimum Requirements =
- * PHP version 5.4.0 or greater.
-
-== Installation ==
-1. Upload the plugin files to the `/wp-content/plugins/plugin-name` directory, or install the plugin through the WordPress plugins screen directly.
+1. Upload the plugin files to the `/wp-content/plugins/wp-vulnerable-updates` directory, or install the plugin through the WordPress plugins screen directly.
 2. Activate the plugin through the 'Plugins' screen in WordPress
 3. Use the Settings->WP Vulnerable Updates to configure the plugin
 
