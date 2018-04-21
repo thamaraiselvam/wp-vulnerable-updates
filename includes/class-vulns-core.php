@@ -62,6 +62,10 @@ class WPVU_Vulns_Core{
 
 	public function add_notice(){
 
+		if (get_option('wpvu-core-updates', 'not_found') === 'not_found') {
+			return $this->process_core();
+		}
+
 		if ($this->can_load_admin_notices()) {
 			add_action( 'admin_notices', array( $this, 'trigger_admin_notice' ) );
 		}
